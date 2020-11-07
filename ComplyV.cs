@@ -160,26 +160,28 @@ namespace ComplyV
         static void AnyOneLevel(Level lvl)
         {
             Console.WriteLine("Enter the Approver Code from the following list");
-            foreach (var usr in lvl.levelUsers)
+            foreach (var user in lvl.levelUsers)
             {
-                Console.WriteLine("[" + usr.UserCode + "] " + AllUsersList[usr.UserCode]);
+                Console.WriteLine("[" + user.UserCode + "] " + AllUsersList[user.UserCode]);
             }
             Console.Write("Approver Code: ");
             string apprCode = Console.ReadLine().Trim();
-            if (lvl.levelUsers.Find(ur => ur.UserCode == apprCode) != null)
+            var usr = lvl.levelUsers.Find(ur => ur.UserCode == apprCode);
+            if(usr != null)
             {
-                foreach (var ur in lvl.levelUsers)
+               // foreach (var ur in lvl.levelUsers 
+                //var ur = lvl.levelUsers.find
+                //{
+                if (String.IsNullOrEmpty(usr.ApprovalStatus))
                 {
-                    if (String.IsNullOrEmpty(ur.ApprovalStatus))
+                    Console.Write("Enter Approval Action for " + AllUsersList[usr.UserCode] + "\n[1]Approved [2]Rejected [3]Reject & Remove from Workflow");
+                    usr.ApprovalStatus = Enum.GetName(typeof(ApprovalStatus), int.Parse(Console.ReadLine().Trim()));
+                    if(usr.ApprovalStatus == "Rejected")
                     {
-                        Console.Write("Enter Approval Action for " + AllUsersList[ur.UserCode] + "\n[1]Approved [2]Rejected [3]Reject & Remove from Workflow");
-                        ur.ApprovalStatus = Enum.GetName(typeof(ApprovalStatus), int.Parse(Console.ReadLine().Trim()));
-                        if (ur.ApprovalStatus == "Approved")
-                        {
-                            break;
-                        }                        
-                    }
-                }
+                        AnyOneLevel(lvl);
+                    }   
+                } 
+                //}
                 if (lvl.levelUsers.Where(ur => ur.ApprovalStatus == "Approved").Count() >= 1)
                 {
                     lvl.levelStatus = "Approved";
@@ -192,6 +194,10 @@ namespace ComplyV
                     Console.WriteLine("Level Rejected");
                     return;
                 };
+            }
+            else
+            {
+                AnyOneLevel(lvl);
             }
         }
 
