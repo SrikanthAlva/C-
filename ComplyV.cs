@@ -90,9 +90,9 @@ namespace ComplyV
             var allUsers = Console.ReadLine().ToString().Split(',');
             foreach (string usr in allUsers)
             {
-                //Dictionary<string, string> tempDict = new Dictionary<string, string>() { { Enum.GetName(typeof(Users), int.Parse(usr.Trim())), "NotApproved" } };
-                //currentLevel.levelUsers.Add(Enum.GetName(typeof(Users), int.Parse(usr.Trim())), "NotApproved");
-                currentLevel.levelUsers.Add(new LevelUser() { UserCode = usr.Trim(), ApprovalStatus = "NotApproved" });
+                //Dictionary<string, string> tempDict = new Dictionary<string, string>() { { Enum.GetName(typeof(Users), int.Parse(usr.Trim())), "" } };
+                //currentLevel.levelUsers.Add(Enum.GetName(typeof(Users), int.Parse(usr.Trim())), "");
+                currentLevel.levelUsers.Add(new LevelUser() { UserCode = usr.Trim(), ApprovalStatus = "" });
             }
             return currentLevel;
         }
@@ -112,7 +112,7 @@ namespace ComplyV
             {
                 foreach (var ur in lvl.levelUsers)
                 {
-                    if (ur.UserCode == apprCode && ur.ApprovalStatus == "NotApproved")
+                    if (ur.UserCode == apprCode && String.IsNullOrEmpty(ur.ApprovalStatus))
                     {
                         Console.Write("Enter Approval Action for " + AllUsersList[ur.UserCode] + "\n[1]Approved [2]Rejected [3]Reject & Remove from Workflow");
                         ur.ApprovalStatus = Enum.GetName(typeof(ApprovalStatus), int.Parse(Console.ReadLine().Trim()));
@@ -142,7 +142,7 @@ namespace ComplyV
             {
                 foreach (var ur in lvl.levelUsers)
                 {
-                    if (ur.UserCode == apprCode && ur.ApprovalStatus == "NotApproved")
+                    if (ur.UserCode == apprCode && String.IsNullOrEmpty(ur.ApprovalStatus))
                     {
                         Console.Write("Enter Approval Action for " + AllUsersList[ur.UserCode] + "\n[1]Approved [2]Rejected [3]Reject & Remove from Workflow");
                         ur.ApprovalStatus = Enum.GetName(typeof(ApprovalStatus), int.Parse(Console.ReadLine().Trim()));
@@ -170,25 +170,28 @@ namespace ComplyV
             {
                 foreach (var ur in lvl.levelUsers)
                 {
-                    if (ur.UserCode == apprCode && ur.ApprovalStatus == "NotApproved")
+                    if (String.IsNullOrEmpty(ur.ApprovalStatus))
                     {
                         Console.Write("Enter Approval Action for " + AllUsersList[ur.UserCode] + "\n[1]Approved [2]Rejected [3]Reject & Remove from Workflow");
                         ur.ApprovalStatus = Enum.GetName(typeof(ApprovalStatus), int.Parse(Console.ReadLine().Trim()));
                         if (ur.ApprovalStatus == "Approved")
                         {
                             break;
-                        }
+                        }                        
                     }
                 }
                 if (lvl.levelUsers.Where(ur => ur.ApprovalStatus == "Approved").Count() >= 1)
                 {
                     lvl.levelStatus = "Approved";
+                    Console.WriteLine("Level Approved");
+                    return;
                 }
                 else if (lvl.levelUsers.Where(ur => ur.ApprovalStatus == "Rejected").Count() == lvl.levelUsers.Count())
                 {
                     lvl.levelStatus = "Rejected";
+                    Console.WriteLine("Level Rejected");
+                    return;
                 };
-
             }
         }
 
@@ -198,8 +201,7 @@ namespace ComplyV
 
     enum ApprovalStatus
     {
-        NotApproved,
-        Approved,
+        Approved = 1,
         Rejected,
         RejectRemoveWorkflow
     }
