@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace ComplyV
@@ -17,7 +18,7 @@ namespace ComplyV
         static void Main(string[] args)
         {
             List<WorkFlow> AllWorkFlows = new List<WorkFlow>();
-            
+
             Console.WriteLine("Welcome to Workflow Management System \n[1] Create New Workflow \n[2] Choose from existing workflows");
             //Console.WriteLine("[1] Create New Workflow \n[2] Choose from existing workflows");
             Console.Write("Enter the Option Number: ");
@@ -44,20 +45,23 @@ namespace ComplyV
                 {
                     foreach (Level lvl in workFlowObj.LevelList)
                     {
-                        switch (lvl.levelName) {
-                            case "Sequential":
-                                SequentialLevel(lvl);
-                                break;
+                        if (String.IsNullOrEmpty(lvl.levelStatus) )
+                        {
+                            switch (lvl.levelName)
+                            {
+                                case "Sequential":
+                                    SequentialLevel(lvl);
+                                    break;
 
-                            case "RoundRobin":
-                                RoundRobinLevel(lvl);
-                                break;
+                                case "RoundRobin":
+                                    RoundRobinLevel(lvl);
+                                    break;
 
-                            case "AnyOne":
-                                AnyOneLevel(lvl);
-                                break;
+                                case "AnyOne":
+                                    AnyOneLevel(lvl);
+                                    break;
+                            }
                         }
-
                     }
                 }
             }
@@ -98,33 +102,6 @@ namespace ComplyV
         static void SequentialLevel(Level lvl)
         {
             Console.WriteLine("Enter the Approver Code from the following list");
-            foreach(var usr in lvl.levelUsers)
-            {
-                Console.WriteLine("[" + usr.UserCode + "] " + AllUsersList[usr.UserCode]);
-            }
-            Console.Write("Approver Code: ");
-            string apprCode = Console.ReadLine().Trim();
-            if (lvl.levelUsers.Find(ur => ur.UserCode == apprCode) != null) {
-                foreach(var ur in lvl.levelUsers)
-                {
-                    if(ur.UserCode == apprCode && ur.ApprovalStatus == "NotApproved") {
-                        Console.Write("Enter Approval Action for "+ AllUsersList[ur.UserCode] +"\n[1]Approved [2]Rejected [3]Reject & Remove from Workflow");
-                        ur.ApprovalStatus = Enum.GetName(typeof(ApprovalStatus), int.Parse(Console.ReadLine().Trim()));
-                    } else
-                    {
-                        if(ur.ApprovalStatus == "Rejected")
-                        {
-                            break;
-                        }
-                    }
-                }
-                Console.WriteLine("Approver Found");
-            }
-        }
-
-        static void RoundRobinLevel(Level lvl)
-        {
-            Console.WriteLine("Enter the Approver Code from the following list");
             foreach (var usr in lvl.levelUsers)
             {
                 Console.WriteLine("[" + usr.UserCode + "] " + AllUsersList[usr.UserCode]);
@@ -152,6 +129,34 @@ namespace ComplyV
             }
         }
 
+        static void RoundRobinLevel(Level lvl)
+        {
+            Console.WriteLine("Enter the Approver Code from the following list");
+            foreach (var usr in lvl.levelUsers)
+            {
+                Console.WriteLine("[" + usr.UserCode + "] " + AllUsersList[usr.UserCode]);
+            }
+            Console.Write("Approver Code: ");
+            string apprCode = Console.ReadLine().Trim();
+            if (lvl.levelUsers.Find(ur => ur.UserCode == apprCode) != null)
+            {
+                foreach (var ur in lvl.levelUsers)
+                {
+                    if (ur.UserCode == apprCode && ur.ApprovalStatus == "NotApproved")
+                    {
+                        Console.Write("Enter Approval Action for " + AllUsersList[ur.UserCode] + "\n[1]Approved [2]Rejected [3]Reject & Remove from Workflow");
+                        ur.ApprovalStatus = Enum.GetName(typeof(ApprovalStatus), int.Parse(Console.ReadLine().Trim()));
+                    }
+                    else if (ur.ApprovalStatus == "Rejected")
+                    {
+                        break;
+                    }
+
+                }
+                Console.WriteLine("Approver Found");
+            }
+        }
+
         static void AnyOneLevel(Level lvl)
         {
             Console.WriteLine("Enter the Approver Code from the following list");
@@ -169,14 +174,21 @@ namespace ComplyV
                     {
                         Console.Write("Enter Approval Action for " + AllUsersList[ur.UserCode] + "\n[1]Approved [2]Rejected [3]Reject & Remove from Workflow");
                         ur.ApprovalStatus = Enum.GetName(typeof(ApprovalStatus), int.Parse(Console.ReadLine().Trim()));
-                        if(ur.ApprovalStatus == "Approved")
+                        if (ur.ApprovalStatus == "Approved")
                         {
-                            lvl.levelStatus = "Approved";
                             break;
                         }
-                    } 
+                    }
                 }
-                
+                if (lvl.levelUsers.Where(ur => ur.ApprovalStatus == "Approved").Count() >= 1)
+                {
+                    lvl.levelStatus = "Approved";
+                }
+                else if (lvl.levelUsers.Where(ur => ur.ApprovalStatus == "Rejected").Count() == lvl.levelUsers.Count())
+                {
+                    lvl.levelStatus = "Rejected";
+                };
+
             }
         }
 
@@ -184,17 +196,18 @@ namespace ComplyV
 
     }
 
-    enum ApprovalStatus {
-       NotApproved,
-       Approved,
-       Rejected,
-       RejectRemoveWorkflow
+    enum ApprovalStatus
+    {
+        NotApproved,
+        Approved,
+        Rejected,
+        RejectRemoveWorkflow
     }
 
     enum ApprovalType
     {
         Sequential = 1,
-        RoundRobin, 
+        RoundRobin,
         AnyOne
     }
 
